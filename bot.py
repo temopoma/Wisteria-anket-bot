@@ -81,7 +81,7 @@ def filling_out_the_questionnaire(callback):
         id = callback.data[24:]
         button_approve_the_application(id)
 
-    if 'reject the questionnaire' in callback.data:
+    elif 'reject the questionnaire' in callback.data:
         id = callback.data[25:]
         button_reject_the_questionnaire(id)
 
@@ -92,10 +92,14 @@ def filling_out_the_questionnaire(callback):
     elif 'confirm rejection' in callback.data:
         id = callback.data[18:]
         button_confirm_rejection(id)
+    
+    if 'ban user' in callback.data:
+        id = callback.data[9:]
+        batton_ban_user(id)
 
 
 def button_start_questionnaire_filling(callback):
-    # ОЧИСТКА: Удаляем все ожидающие шаги для этого пользователя
+    # Удаляем все ожидающие шаги для этого пользователя
 
     if users[callback.message.chat.id].questionnaire_status == 'accepted':
         bot.send_message(callback.message.chat.id, 'Ты уже был принят во флуд. Если это ошибка, обратись к разработчику или владельцам флуда')
@@ -243,7 +247,8 @@ def button_submit_for_review(callback):
         button1 = types.InlineKeyboardButton('Одобрить', callback_data=f'approve the application {callback.message.chat.id}')
         button2 = types.InlineKeyboardButton('Отказать', callback_data=f'reject the questionnaire {callback.message.chat.id}')
         murkup.row(button1, button2)
-
+        button = types.InlineKeyboardButton('Забанить', callback_data=f'ban user {callback.message.chat.id}')
+        murkup.add(button)
 
         bot.send_media_group(-1002785603215, media)
         bot.send_message(-1002785603215,( 
@@ -301,7 +306,10 @@ def button_do_not_confirm_rejection(id):
     f'Выберите действие с <a href="tg://user?id={id}">{users[id].first_name}</a>'
     ),reply_markup=murkup)
 
-
+def button_ban_user(id):
+    users[int(id)].questionnaire_status == 'banned'
+    bot.send_message(id, 'Ты был забанен во флуде. Обратись к администрации за дополнительной информацией или чтобы сообщить об ошибке.')
+    bot.send_message(-1002785603215, f'{users[int(id)].user_link} был забанен во флуде')
 
 
 
