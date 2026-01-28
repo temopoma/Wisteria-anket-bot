@@ -1,10 +1,15 @@
+import os
 import telebot
 from telebot import types
 from telebot import apihelper
-import logging
-import sqlite3
-import time
+import threading
 from threading import Timer
+import requests
+import gradio as gr
+import time
+from flask import Flask, request
+# import logging
+# import sqlite3
 
 apihelper.CONNECT_TIMEOUT = 40
 apihelper.READ_TIMEOUT = 40
@@ -12,7 +17,27 @@ apihelper.READ_TIMEOUT = 40
 # logger = logging.getLogger('TeleBot')
 # logger.setLevel(logging.CRITICAL)
 
-bot = telebot.TeleBot('8550201192:AAH86Cim3mAzTYzSo9q-_20KT_BSv1GnCi0')
+
+TOKEN = os.environ.get("BOT_TOKEN", "")
+
+bot = telebot.TeleBot(TOKEN)
+
+
+def run_bot():
+    """Запуск бота с обработкой ошибок"""
+    while True:
+        try:
+            print("🤖 Запускаю бота на Railway...")
+            bot.polling(
+                none_stop=True,
+                interval=1,
+                timeout=30,
+                long_polling_timeout=5
+            )
+        except Exception as e:
+            print(f"⚠️ Ошибка: {type(e).__name__}: {str(e)[:100]}")
+            print("🔄 Перезапуск через 5 секунд...")
+            time.sleep(5)
 
 
 user_data = {} #Временное хранилище данных, сбрасывается после заполнения анкеты
@@ -68,7 +93,7 @@ def command_start(message):
 
 
 @bot.callback_query_handler(func=lambda callback: True)
-def filling_out_the_questionnaire(callback):
+def button_callback(callback):
     print(f'{callback.from_user.username} pressed button {callback.data}')
     
     if callback.data == 'start_questionnaire_filling':
@@ -95,7 +120,7 @@ def filling_out_the_questionnaire(callback):
     
     if 'ban user' in callback.data:
         id = callback.data[9:]
-        batton_ban_user(id)
+        button_ban_user(id)
 
 
 def button_start_questionnaire_filling(callback):
@@ -315,7 +340,9 @@ def button_ban_user(id):
 
 
 @bot.message_handler()
-def text(message):
+def text_handler(message):
+    if message.text[4:] == 'echo':
+        bot.reply_to(message.chat.id, message.text)
     if message.chat.id == -1002785603215:
         print(f'{message.from_user.username} from owner chat: {message.text}')
     else:
@@ -324,4 +351,14 @@ def text(message):
         print(message.from_user.id)
 
 
-bot.infinity_polling(timeout=90, long_polling_timeout=5)
+if __name__ == "__main__":
+    print("=" * 50)
+    print("🚀 WISTERIA ANKET BOT")
+    print(f"✅ Токен: {'Установлен' if TOKEN else 'НЕ НАЙДЕН!'}")
+    print("=" * 50)
+    
+    if not TOKEN:
+        print("❌ ОШИБКА: BOT_TOKEN не установлен!")
+        print("Добавьте BOT_TOKEN в настройках Railway")
+    else:
+        run_bot()
