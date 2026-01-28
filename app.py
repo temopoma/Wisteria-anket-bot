@@ -8,7 +8,6 @@ from threading import Timer
 import requests
 import gradio as gr
 import time
-from flask import Flask, request
 import logging
 from datetime import datetime
 # import logging
