@@ -1,4 +1,5 @@
 import os
+import sys
 import telebot
 from telebot import types
 from telebot import apihelper
@@ -8,6 +9,8 @@ import requests
 import gradio as gr
 import time
 from flask import Flask, request
+import logging
+from datetime import datetime
 # import logging
 # import sqlite3
 
@@ -17,29 +20,69 @@ apihelper.READ_TIMEOUT = 40
 # logger = logging.getLogger('TeleBot')
 # logger.setLevel(logging.CRITICAL)
 
-
-TOKEN = os.environ.get("BOT_TOKEN", "")
-
 bot = telebot.TeleBot(TOKEN)
 
-try:
-    def run_bot():
-        """Запуск бота с обработкой ошибок"""
-        while True:
-            try:
-                print("🤖 Запускаю бота на Railway...")
-                bot.polling(
-                    none_stop=True,
-                    interval=1,
-                    timeout=30,
-                    long_polling_timeout=5
-                )
-            except Exception as e:
-                print(f"⚠️ Ошибка: {type(e).__name__}: {str(e)[:100]}")
-                print("🔄 Перезапуск через 5 секунд...")
-                time.sleep(5)
-except Exception as e:
-    print(e)
+# === 1. НАСТРОЙКА ЛОГИРОВАНИЯ В ФАЙЛ ===
+LOG_FILE = "bot_errors.log"
+
+# Настраиваем логгер, который пишет и в файл, и в консоль
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),  # В файл
+        logging.StreamHandler(sys.stdout)                  # В консоль (Railway)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# === 2. ПРОВЕРКА ТОКЕНА ===
+TOKEN = os.environ.get("BOT_TOKEN", "")
+if not TOKEN:
+    logger.critical("❌ BOT_TOKEN не найден! Добавьте переменную в Railway Variables.")
+    sys.exit(1)
+
+logger.info("=" * 50)
+logger.info("🚀 WISTERIA ANKET BOT ЗАПУСКАЕТСЯ")
+logger.info(f"✅ Токен получен (первые 5 символов): {TOKEN[:5]}...")
+logger.info("=" * 50)
+
+
+def run_bot():
+    restart_count = 0
+    while restart_count < 20:  # Максимум 20 перезапусков
+        try:
+            restart_count += 1
+            logger.info(f"🔄 Попытка запуска №{restart_count}")
+            logger.info("Запускаю bot.polling()...")
+            
+            # Основной запуск бота
+            bot.polling(
+                none_stop=True,
+                interval=1,
+                timeout=30,
+                long_polling_timeout=5
+            )
+            
+            # Если polling завершился "нормально" (без исключения) - это странно
+            logger.warning("bot.polling() завершился без ошибки. Перезапуск.")
+            time.sleep(5)
+            
+        except Exception as e:
+            # Логируем ВСЕ детали ошибки
+            logger.critical(f"💥 КРИТИЧЕСКАЯ ОШИБКА В БОТЕ:")
+            logger.critical(f"   Тип ошибки: {type(e).__name__}")
+            logger.critical(f"   Сообщение: {str(e)}")
+            
+            # Для частых ошибок добавим traceback в файл
+            import traceback
+            error_details = traceback.format_exc()
+            logger.critical(f"   Traceback:\n{error_details}")
+            
+            # Ждем перед перезапуском
+            wait_time = min(300, restart_count * 10)  # Максимум 5 минут
+            logger.info(f"🔄 Перезапуск через {wait_time} секунд...")
+            time.sleep(wait_time)
 
 
 user_data = {} #Временное хранилище данных, сбрасывается после заполнения анкеты
@@ -354,13 +397,13 @@ def text_handler(message):
 
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print("🚀 WISTERIA ANKET BOT")
-    print(f"✅ Токен: {'Установлен' if TOKEN else 'НЕ НАЙДЕН!'}")
-    print("=" * 50)
-    
-    if not TOKEN:
-        print("❌ ОШИБКА: BOT_TOKEN не установлен!")
-        print("Добавьте BOT_TOKEN в настройках Railway")
-    else:
+    try:
         run_bot()
+    except KeyboardInterrupt:
+        logger.info("Бот остановлен вручную")
+    except Exception as e:
+        # Этот блок перехватит ошибки, возникшие ДО запуска polling
+        logger.critical(f"💥 ОШИБКА ПРИ ЗАПУСКЕ: {e}")
+        import traceback
+        logger.critical(traceback.format_exc())
+        sys.exit(1)
