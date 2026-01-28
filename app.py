@@ -19,6 +19,11 @@ apihelper.READ_TIMEOUT = 40
 # logger = logging.getLogger('TeleBot')
 # logger.setLevel(logging.CRITICAL)
 
+TOKEN = os.environ.get("BOT_TOKEN", "")
+if not TOKEN:
+    logger.critical("❌ BOT_TOKEN не найден! Добавьте переменную в Railway Variables.")
+    sys.exit(1)
+
 bot = telebot.TeleBot(TOKEN)
 
 # === 1. НАСТРОЙКА ЛОГИРОВАНИЯ В ФАЙЛ ===
@@ -36,10 +41,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # === 2. ПРОВЕРКА ТОКЕНА ===
-TOKEN = os.environ.get("BOT_TOKEN", "")
-if not TOKEN:
-    logger.critical("❌ BOT_TOKEN не найден! Добавьте переменную в Railway Variables.")
-    sys.exit(1)
 
 logger.info("=" * 50)
 logger.info("🚀 WISTERIA ANKET BOT ЗАПУСКАЕТСЯ")
