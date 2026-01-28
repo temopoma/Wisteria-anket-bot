@@ -22,22 +22,24 @@ TOKEN = os.environ.get("BOT_TOKEN", "")
 
 bot = telebot.TeleBot(TOKEN)
 
-
-def run_bot():
-    """Запуск бота с обработкой ошибок"""
-    while True:
-        try:
-            print("🤖 Запускаю бота на Railway...")
-            bot.polling(
-                none_stop=True,
-                interval=1,
-                timeout=30,
-                long_polling_timeout=5
-            )
-        except Exception as e:
-            print(f"⚠️ Ошибка: {type(e).__name__}: {str(e)[:100]}")
-            print("🔄 Перезапуск через 5 секунд...")
-            time.sleep(5)
+try:
+    def run_bot():
+        """Запуск бота с обработкой ошибок"""
+        while True:
+            try:
+                print("🤖 Запускаю бота на Railway...")
+                bot.polling(
+                    none_stop=True,
+                    interval=1,
+                    timeout=30,
+                    long_polling_timeout=5
+                )
+            except Exception as e:
+                print(f"⚠️ Ошибка: {type(e).__name__}: {str(e)[:100]}")
+                print("🔄 Перезапуск через 5 секунд...")
+                time.sleep(5)
+except Exception as e:
+    print(e)
 
 
 user_data = {} #Временное хранилище данных, сбрасывается после заполнения анкеты
