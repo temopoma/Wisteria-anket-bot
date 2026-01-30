@@ -21,7 +21,6 @@ apihelper.READ_TIMEOUT = 40
 
 TOKEN = os.environ.get("BOT_TOKEN", "")
 if not TOKEN:
-    logger.critical("❌ BOT_TOKEN не найден! Добавьте переменную в Railway Variables.")
     sys.exit(1)
 
 bot = telebot.TeleBot(TOKEN)
@@ -386,8 +385,9 @@ def button_ban_user(id):
 
 @bot.message_handler()
 def text_handler(message):
+    print(message.text[:4] == 'echo')
     if message.text[:4] == 'echo':
-        bot.reply_to(message.chat.id, message.text)
+        bot.send_message(message.chat.id, message.text)
     if message.chat.id == -1002785603215:
         print(f'{message.from_user.username} from owner chat: {message.text}')
     else:
