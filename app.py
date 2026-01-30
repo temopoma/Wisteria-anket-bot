@@ -43,8 +43,7 @@ logger = logging.getLogger(__name__)
 # === 2. ПРОВЕРКА ТОКЕНА ===
 
 logger.info("=" * 50)
-logger.info("🚀 WISTERIA ANKET BOT ЗАПУСКАЕТСЯ")
-logger.info(f"✅ Токен получен (первые 5 символов): {TOKEN[:5]}...")
+logger.info("WISTERIA ANKET BOT STARTING")
 logger.info("=" * 50)
 
 
@@ -53,8 +52,8 @@ def run_bot():
     while restart_count < 20:  # Максимум 20 перезапусков
         try:
             restart_count += 1
-            logger.info(f"🔄 Попытка запуска №{restart_count}")
-            logger.info("Запускаю bot.polling()...")
+            logger.info(f"Starting attemp №{restart_count}")
+            logger.info("Starting bot.polling()...")
             
             # Основной запуск бота
             bot.polling(
@@ -65,7 +64,7 @@ def run_bot():
             )
             
             # Если polling завершился "нормально" (без исключения) - это странно
-            logger.warning("bot.polling() завершился без ошибки. Перезапуск.")
+            logger.warning("bot.polling() ended without an error. restarting.")
             time.sleep(5)
             
         except Exception as e:
@@ -387,7 +386,7 @@ def button_ban_user(id):
 
 @bot.message_handler()
 def text_handler(message):
-    if message.text[4:] == 'echo':
+    if message.text[:4] == 'echo':
         bot.reply_to(message.chat.id, message.text)
     if message.chat.id == -1002785603215:
         print(f'{message.from_user.username} from owner chat: {message.text}')
