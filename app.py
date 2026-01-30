@@ -105,6 +105,7 @@ users = {}
 
 @bot.message_handler(commands=['start'])
 def command_start(message):
+    print(message.chat.type)
     bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
 
     users[message.chat.id] = User(message.chat.id, message.from_user.username, message.from_user.first_name)
