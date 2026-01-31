@@ -91,7 +91,7 @@ def command_start(message):
     if message.chat.type == 'private':
         bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
         
-        if users[message.chat.id] == None:
+        if not users[message.chat.id]:
             users[message.chat.id] = User(message.chat.id, message.from_user.username, message.from_user.first_name)
 
         if users[message.chat.id].questionnaire_status == 'accepted':
