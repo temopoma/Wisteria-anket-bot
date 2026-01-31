@@ -361,6 +361,7 @@ def button_confirm_rejection(id):
         f'Твоя анкета была отклонена по причине: {users[int(id)].reject_text}\n'
         f'Ты можешь просто заполнить её заново'
     ), reply_markup=murkup)
+    users[id].questionnaire_status = None
 
 def button_do_not_confirm_rejection(id):
     murkup = types.InlineKeyboardMarkup()
