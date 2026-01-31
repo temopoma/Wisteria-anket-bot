@@ -10,6 +10,7 @@ import gradio as gr
 import time
 import logging
 from datetime import datetime
+import re
 # import logging
 # import sqlite3
 
@@ -385,7 +386,14 @@ def button_ban_user(id):
 
 @bot.message_handler()
 def text_handler(message):
-    print(message.text[:4] == 'echo')
+    #handle mentions
+    if contains_mention(message.text): #and message.from_user.is_bot
+        for i in find_mentions(message.text):
+            if is_channel_mention(i):
+                # bot.delete_message(message.chat.id, message.message_id)
+                bot.send_message(-1002785603215, f'Подозрение на рекламу от @{message.from_user.username}: {message.chat.id}')
+
+
     if message.text[:4] == 'echo':
         bot.send_message(message.chat.id, message.text)
     if message.chat.id == -1002785603215:
@@ -394,6 +402,36 @@ def text_handler(message):
         print(f'{message.from_user.username}: {message.text}')
     if message.from_user.id == None:
         print(message.from_user.id)
+
+
+def find_mentions(text):
+    """Находит все упоминания @username в тексте."""
+    if not text:
+        return []
+    # Регулярное выражение ищет @ и последующие буквы/цифры/подчёркивания
+    return re.findall(r'@(\w+)', text)
+
+def contains_mention(message):
+    """Проверяет, есть ли в сообщении упоминания."""
+    text = message.text or message.caption or ''
+    return bool(find_mentions(text))
+
+def is_channel_mention(username):
+    """
+    Проверяет, является ли упоминание каналом.
+    Возвращает True для каналов/супергрупп, False для пользователей/ботов/приватных чатов.
+    """
+    try:
+        # Пробуем получить информацию о чате по username
+        chat = bot.get_chat(f'@{username}')
+        # Типы чатов: 'private', 'group', 'supergroup', 'channel'
+        return chat.type in ['channel', 'supergroup']
+    except Exception as e:
+        # Если ошибка,
+        # можно считать это "безопасным"
+        print(f"Не удалось проверить @{username}: {e}")
+        return False
+
 
 
 if __name__ == "__main__":
