@@ -3,59 +3,48 @@ import sys
 import telebot
 from telebot import types
 from telebot import apihelper
-import threading
-from threading import Timer
-import requests
-import gradio as gr
 import time
 import logging
-from datetime import datetime
 import re
-# import logging
 # import sqlite3
 
 apihelper.CONNECT_TIMEOUT = 40
 apihelper.READ_TIMEOUT = 40
 
-# logger = logging.getLogger('TeleBot')
-# logger.setLevel(logging.CRITICAL)
+# TOKEN = os.environ.get("BOT_TOKEN", "") #getting token
+# if not TOKEN:
+    # sys.exit(1)
 
-TOKEN = os.environ.get("BOT_TOKEN", "")
-if not TOKEN:
-    sys.exit(1)
+bot = telebot.TeleBot('8550201192:AAEOcmyb7sLm6-Hwqd5DPzjzzjuqupJmICA')
 
-bot = telebot.TeleBot(TOKEN)
-
-# === 1. НАСТРОЙКА ЛОГИРОВАНИЯ В ФАЙЛ ===
+# logging in file
 LOG_FILE = "bot_errors.log"
 
-# Настраиваем логгер, который пишет и в файл, и в консоль
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(LOG_FILE, encoding='utf-8'),  # В файл
-        logging.StreamHandler(sys.stdout)                  # В консоль (Railway)
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),  # in file
+        logging.StreamHandler(sys.stdout)                  # in console
     ]
 )
 logger = logging.getLogger(__name__)
 
-# === 2. ПРОВЕРКА ТОКЕНА ===
 
 logger.info("=" * 50)
-logger.info("WISTERIA ANKET BOT STARTING")
+logger.info("WISTERIA WHISPER BOT STARTING")
 logger.info("=" * 50)
 
 
 def run_bot():
     restart_count = 0
-    while restart_count < 20:  # Максимум 20 перезапусков
+    while restart_count < 20:  # 20 restarts maximum
         try:
             restart_count += 1
             logger.info(f"Starting attemp №{restart_count}")
             logger.info("Starting bot.polling()...")
             
-            # Основной запуск бота
+            # starting bot
             bot.polling(
                 none_stop=True,
                 interval=1,
@@ -63,28 +52,23 @@ def run_bot():
                 long_polling_timeout=5
             )
             
-            # Если polling завершился "нормально" (без исключения) - это странно
+            # if bot ended without exception
             logger.warning("bot.polling() ended without an error. restarting.")
             time.sleep(5)
             
         except Exception as e:
-            # Логируем ВСЕ детали ошибки
-            logger.critical(f"💥 КРИТИЧЕСКАЯ ОШИБКА В БОТЕ:")
-            logger.critical(f"   Тип ошибки: {type(e).__name__}")
-            logger.critical(f"   Сообщение: {str(e)}")
+            logger.critical(f"CRITICAL ERROR:")
+            logger.critical(f"   ERROR TYPE: {type(e).__name__}")
+            logger.critical(f"   MESSAGE: {str(e)}")
             
-            # Для частых ошибок добавим traceback в файл
             import traceback
             error_details = traceback.format_exc()
             logger.critical(f"   Traceback:\n{error_details}")
             
-            # Ждем перед перезапуском
-            wait_time = min(300, restart_count * 10)  # Максимум 5 минут
-            logger.info(f"🔄 Перезапуск через {wait_time} секунд...")
+            wait_time = min(300, restart_count * 10)  # 5 minutes maximum
+            logger.info(f"Restarting in {wait_time} seconds...")
             time.sleep(wait_time)
 
-
-user_data = {} #Временное хранилище данных, сбрасывается после заполнения анкеты
 rejection_data = {} #Временное хранилище для отказов
 
 class User:
@@ -106,8 +90,9 @@ users = {}
 def command_start(message):
     if message.chat.type == 'private':
         bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
-
-        users[message.chat.id] = User(message.chat.id, message.from_user.username, message.from_user.first_name)
+        
+        if users[message.chat.id] == None:
+            users[message.chat.id] = User(message.chat.id, message.from_user.username, message.from_user.first_name)
 
         if users[message.chat.id].questionnaire_status == 'accepted':
             bot.send_message(message.chat.id, 'Ты уже был принят во флуд. Если это ошибка, обратись к разработчику или владельцам флуда')
@@ -121,7 +106,7 @@ def command_start(message):
             else:
                 users[message.chat.id].user_link = f'<a href="tg://user?id={message.chat.id}">{users[message.chat.id].first_name}</a>'
 
-            print(f'command start from {message.from_user.username}')
+            print(f'command start from {users[message.chat.id].user_link}')
 
             murkup = types.InlineKeyboardMarkup()
             button1 = types.InlineKeyboardButton('Инфо канал', url='https://t.me/WW_flood')
