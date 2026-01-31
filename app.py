@@ -357,7 +357,7 @@ def button_confirm_rejection(id):
     button = types.InlineKeyboardButton('Начать заново', callback_data='start_questionnaire_filling')
     murkup.add(button)
     
-    users[id].questionnaire_status = None
+    users[int(id)].questionnaire_status = None
     bot.send_message(id, (
         f'Твоя анкета была отклонена по причине: {users[int(id)].reject_text}\n'
         f'Ты можешь просто заполнить её заново'
