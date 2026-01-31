@@ -11,11 +11,11 @@ import re
 apihelper.CONNECT_TIMEOUT = 40
 apihelper.READ_TIMEOUT = 40
 
-# TOKEN = os.environ.get("BOT_TOKEN", "") #getting token
-# if not TOKEN:
-    # sys.exit(1)
+TOKEN = os.environ.get("BOT_TOKEN", "") #getting token
+if not TOKEN:
+    sys.exit(1)
 
-bot = telebot.TeleBot('8550201192:AAEOcmyb7sLm6-Hwqd5DPzjzzjuqupJmICA')
+bot = telebot.TeleBot(TOKEN)
 
 # logging in file
 LOG_FILE = "bot_errors.log"
