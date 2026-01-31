@@ -167,7 +167,7 @@ def button_callback(callback):
 
 
 def button_start_questionnaire_filling(callback):
-    bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
+    bot.clear_step_handler_by_chat_id(chat_id=callback.chat.id)
 
     if users[callback.message.chat.id].questionnaire_status == 'accepted':
         bot.send_message(callback.message.chat.id, 'Ты уже был принят во флуд. Если это ошибка, обратись к разработчику или владельцам флуда')
