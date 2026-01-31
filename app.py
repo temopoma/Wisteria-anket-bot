@@ -167,7 +167,7 @@ def button_callback(callback):
 
 
 def button_start_questionnaire_filling(callback):
-    # Удаляем все ожидающие шаги для этого пользователя
+    bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
 
     if users[callback.message.chat.id].questionnaire_status == 'accepted':
         bot.send_message(callback.message.chat.id, 'Ты уже был принят во флуд. Если это ошибка, обратись к разработчику или владельцам флуда')
@@ -357,11 +357,11 @@ def button_confirm_rejection(id):
     button = types.InlineKeyboardButton('Начать заново', callback_data='start_questionnaire_filling')
     murkup.add(button)
     
+    users[id].questionnaire_status = None
     bot.send_message(id, (
         f'Твоя анкета была отклонена по причине: {users[int(id)].reject_text}\n'
         f'Ты можешь просто заполнить её заново'
     ), reply_markup=murkup)
-    users[id].questionnaire_status = None
 
 def button_do_not_confirm_rejection(id):
     murkup = types.InlineKeyboardMarkup()
