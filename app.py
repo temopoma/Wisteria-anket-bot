@@ -91,21 +91,34 @@ def command_start(message):
     if message.chat.type == 'private':
         bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
         
-        if not users[message.chat.id]:
-            users[message.chat.id] = User(message.chat.id, message.from_user.username, message.from_user.first_name)
+        try:
+            if users[message.chat.id].questionnaire_status == 'accepted':
+                bot.send_message(message.chat.id, 'Ты уже был принят во флуд. Если это ошибка, обратись к разработчику или владельцам флуда')
+            elif users[message.chat.id].questionnaire_status == 'waiting':
+                bot.send_message(message.chat.id, 'Твоя анкета уже отправлена, дождись ответа. Если возникают проблемы обратись владельцам флуда')
+            elif users[message.chat.id].questionnaire_status == 'banned':
+                bot.send_message(message.chat.id, "Ты был забанен во флуде. Обратись к владельцам если это ошибка")
+            else:
+                print(f'command start from {users[message.chat.id].user_link}')
 
-        if users[message.chat.id].questionnaire_status == 'accepted':
-            bot.send_message(message.chat.id, 'Ты уже был принят во флуд. Если это ошибка, обратись к разработчику или владельцам флуда')
-        elif users[message.chat.id].questionnaire_status == 'waiting':
-            bot.send_message(message.chat.id, 'Твоя анкета уже отправлена, дождись ответа. Если возникают проблемы обратись владельцам флуда')
-        elif users[message.chat.id].questionnaire_status == 'banned':
-            bot.send_message(message.chat.id, "Ты был забанен во флуде. Обратись к владельцам если это ошибка")
-        else:
+                murkup = types.InlineKeyboardMarkup()
+                button1 = types.InlineKeyboardButton('Инфо канал', url='https://t.me/WW_flood')
+                button2 = types.InlineKeyboardButton('Заполнить анкету', callback_data='start_questionnaire_filling')
+                murkup.row(button1, button2)
+
+                bot.send_message(message.chat.id, '''Привет! Чтобы присоединиться к нашему флуду, тебе нужно заполнить короткую анкету. ✨
+📍 Перед началом рекомендуем заглянуть в раздел с правилами в инфо канале. Это не строго обязательно для заполнения анкеты, но знание местных правил сделает твое пребывание в группе комфортнее. Помни: незнание правил не освобождает от ответственности в будущем.
+Для подачи заявки тебе нужно будет указать:
+1: Выбранную роль.
+2: Фандом.
+3: Прикрепить 2 картинки (арты/референсы персонажа).
+Когда будешь готов(а), нажми кнопку ниже! 👇''', reply_markup=murkup)
+        except KeyError:
+            users[message.chat.id] = User(message.chat.id, message.from_user.username, message.from_user.first_name)
             if message.from_user.username != None:
-                users[message.chat.id].user_link = f"@{users[message.chat.id].username}"
+                    users[message.chat.id].user_link = f"@{users[message.chat.id].username}"
             else:
                 users[message.chat.id].user_link = f'<a href="tg://user?id={message.chat.id}">{users[message.chat.id].first_name}</a>'
-
             print(f'command start from {users[message.chat.id].user_link}')
 
             murkup = types.InlineKeyboardMarkup()
