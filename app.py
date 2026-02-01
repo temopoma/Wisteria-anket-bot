@@ -376,7 +376,7 @@ def button_do_not_confirm_rejection(id):
     ),reply_markup=murkup)
 
 def button_ban_user(id):
-    users[int(id)].questionnaire_status == 'banned'
+    users[int(id)].questionnaire_status = 'banned'
     bot.send_message(id, 'Ты был забанен во флуде. Обратись к администрации за дополнительной информацией или чтобы сообщить об ошибке.')
     bot.send_message(-1002785603215, f'{users[int(id)].user_link} был забанен во флуде')
 
