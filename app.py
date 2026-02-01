@@ -386,7 +386,7 @@ def button_ban_user(id):
 @bot.message_handler()
 def text_handler(message):
     #handle mentions
-    if contains_mention(message.text): #and message.from_user.is_bot
+    if contains_mention(message): #and message.from_user.is_bot
         for i in find_mentions(message.text):
             if is_channel_mention(i):
                 # bot.delete_message(message.chat.id, message.message_id)
