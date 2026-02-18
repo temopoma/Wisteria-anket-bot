@@ -6,6 +6,7 @@ from telebot import apihelper
 import time
 import logging
 import re
+import requests
 # import sqlite3
 
 apihelper.CONNECT_TIMEOUT = 40
@@ -38,36 +39,19 @@ logger.info("=" * 50)
 
 def run_bot():
     restart_count = 0
-    while restart_count < 20:  # 20 restarts maximum
+    base_wait = 2  # начальная задержка 2 секунды
+    while restart_count < 50:  # увеличим число попыток
         try:
             restart_count += 1
-            logger.info(f"Starting attemp №{restart_count}")
-            logger.info("Starting bot.polling()...")
-            
-            # starting bot
-            bot.polling(
-                none_stop=True,
-                interval=1,
-                timeout=30,
-                long_polling_timeout=5
-            )
-            
-            # if bot ended without exception
-            logger.warning("bot.polling() ended without an error. restarting.")
-            time.sleep(5)
-            
+            logger.info(f"🔄 Попытка #{restart_count}")
+            bot.polling(none_stop=True, interval=1, timeout=30, long_polling_timeout=5)
+        except requests.exceptions.ConnectionError as e:
+            logger.warning(f"🌐 Сетевая ошибка: {e}. Переподключение через {base_wait}с")
+            time.sleep(base_wait)
+            base_wait = min(base_wait * 1.5, 30)  # экспоненциально до 30 сек
         except Exception as e:
-            logger.critical(f"CRITICAL ERROR:")
-            logger.critical(f"   ERROR TYPE: {type(e).__name__}")
-            logger.critical(f"   MESSAGE: {str(e)}")
-            
-            import traceback
-            error_details = traceback.format_exc()
-            logger.critical(f"   Traceback:\n{error_details}")
-            
-            wait_time = min(300, restart_count * 10)  # 5 minutes maximum
-            logger.info(f"Restarting in {wait_time} seconds...")
-            time.sleep(wait_time)
+            logger.critical(f"💥 Критическая ошибка: {e}")
+            time.sleep(10)
 
 rejection_data = {} #Временное хранилище для отказов
 
@@ -390,7 +374,7 @@ def text_handler(message):
         for i in find_mentions(message.text):
             if is_channel_mention(i):
                 # bot.delete_message(message.chat.id, message.message_id)
-                bot.send_message(-1002785603215, f'Подозрение на рекламу от @{message.from_user.username}: {message.chat.id}')
+                bot.send_message(-1002785603215, f'Подозрение на рекламу от @{message.from_user.username}: {message.text}')
 
 
     if message.text[:4] == 'echo':
