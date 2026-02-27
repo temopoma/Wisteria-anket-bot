@@ -7,8 +7,7 @@ import time
 import logging
 import re
 import requests
-import psycopg2
-from psycopg2 import pool
+import pg8000
 # import sqlite3
 
 apihelper.CONNECT_TIMEOUT = 40
@@ -56,34 +55,25 @@ def run_bot():
             time.sleep(10)
 
 
-# --- НАСТРОЙКА ПОДКЛЮЧЕНИЯ К БАЗЕ ДАННЫХ ---
-# Эти переменные будут автоматически взяты из окружения Railway
+# --- ПОДКЛЮЧЕНИЕ К БД ЧЕРЕЗ pg8000 ---
 db_config = {
     'host': os.environ.get('PGHOST'),
-    'port': os.environ.get('PGPORT'),
-    'dbname': os.environ.get('PGDATABASE'),
+    'port': int(os.environ.get('PGPORT', 5432)),
+    'database': os.environ.get('PGDATABASE'),
     'user': os.environ.get('PGUSER'),
     'password': os.environ.get('PGPASSWORD'),
 }
 
-# Проверяем, все ли переменные для БД найдены
 if not all(db_config.values()):
-    logger.error("❌ Не все переменные окружения для PostgreSQL найдены!")
-    # Можно либо выйти, либо работать в режиме без БД
+    logger.error("❌ Переменные PostgreSQL не найдены")
+    connection = None
 else:
     try:
-        # Создаём пул соединений для эффективной работы
-        connection_pool = psycopg2.pool.SimpleConnectionPool(
-            1,  # Минимальное количество соединений
-            10, # Максимальное количество соединений
-            **db_config
-        )
-        logger.info("✅ Успешное подключение к пулу PostgreSQL")
+        connection = pg8000.connect(**db_config)
+        logger.info("✅ Подключение к PostgreSQL через pg8000 успешно")
     except Exception as e:
-        logger.critical(f"💥 Критическая ошибка подключения к БД: {e}")
-        connection_pool = None
-        # В зависимости от важности, можно остановить бота
-        sys.exit(1)
+        logger.critical(f"💥 Ошибка подключения к БД: {e}")
+        connection = None
 
 rejection_data = {} #Временное хранилище для отказов
 
