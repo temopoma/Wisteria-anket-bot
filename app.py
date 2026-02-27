@@ -7,6 +7,8 @@ import time
 import logging
 import re
 import requests
+import psycopg2
+from psycopg2 import pool
 # import sqlite3
 
 apihelper.CONNECT_TIMEOUT = 40
@@ -52,6 +54,36 @@ def run_bot():
         except Exception as e:
             logger.critical(f"💥 Критическая ошибка: {e}")
             time.sleep(10)
+
+
+# --- НАСТРОЙКА ПОДКЛЮЧЕНИЯ К БАЗЕ ДАННЫХ ---
+# Эти переменные будут автоматически взяты из окружения Railway
+db_config = {
+    'host': os.environ.get('PGHOST'),
+    'port': os.environ.get('PGPORT'),
+    'dbname': os.environ.get('PGDATABASE'),
+    'user': os.environ.get('PGUSER'),
+    'password': os.environ.get('PGPASSWORD'),
+}
+
+# Проверяем, все ли переменные для БД найдены
+if not all(db_config.values()):
+    logger.error("❌ Не все переменные окружения для PostgreSQL найдены!")
+    # Можно либо выйти, либо работать в режиме без БД
+else:
+    try:
+        # Создаём пул соединений для эффективной работы
+        connection_pool = psycopg2.pool.SimpleConnectionPool(
+            1,  # Минимальное количество соединений
+            10, # Максимальное количество соединений
+            **db_config
+        )
+        logger.info("✅ Успешное подключение к пулу PostgreSQL")
+    except Exception as e:
+        logger.critical(f"💥 Критическая ошибка подключения к БД: {e}")
+        connection_pool = None
+        # В зависимости от важности, можно остановить бота
+        sys.exit(1)
 
 rejection_data = {} #Временное хранилище для отказов
 
